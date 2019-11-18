@@ -4,6 +4,11 @@ function plot_it() {
 	lollipop_height = 400
 	lollipop_width = 300
 
+	// convert counts to integer values
+	topic_tag_data.forEach(function(d) {
+		d.count = +d.count;
+	});
+
 	// append svg element
 	var svg = d3.select('body').append('svg')
 			.attr('width', 1500)
