@@ -1,1 +1,0 @@
-To use the virtual environment for python (jupyter notebooks), make sure your system has "virtualenv" or "venv" installed. Then call "source env/bin/activate" to use the virtual environment's local python to run the desired jupyter notebook.
