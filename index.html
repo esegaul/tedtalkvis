@@ -6,17 +6,13 @@
 		<script type='text/javascript' src='d3.js'></script>
 	</head>
 	<body>
-	<script type='text/javascript' src='lollipop.js'></script>
+	<script type='text/javascript' src='vis.js'></script>
 	<script type='text/javascript'>
-		Promise.all(
-			[d3.csv('data/labelled_data.csv'),
-			d3.csv('data/demo_topic_tag.csv')]
-		)
-		.then(function(data)  {
-			ted_talk_data = data[0];
-			topic_tag_data = data[1];
-			plot_it();
-		})
+		d3.csv('data/labelled_data.csv')
+			.then(function(data)  {
+				ted_talk_data = data;
+				plot_it();
+			})
 	</script>
 	</body>
 </html>
