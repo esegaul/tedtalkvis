@@ -5,6 +5,9 @@ function plot_it()  {
 	var right_pad = 25, y_pad = 40
 	var lines_width = lines_width-(left_pad+right_pad), lines_height = lines_height-2*y_pad;
 
+	/*
+	TOPICS BY YEAR PLOT
+	*/
 	var year_keys = ["2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"]
 
 	var svg = d3.select('body').append('svg').attr('width', 1000).attr('height', 1000).attr('transform', 'translate(5,5)')
@@ -37,6 +40,9 @@ function plot_it()  {
 
 	var count_max = 0;
 
+	// sort talks by film_year
+	ted_talk_data.sort((a, b) => (a.film_year > b.film_year) ? 1 : -1)
+
 	var nested_data = d3.nest()
 	.key(d => d.topic_pred_id)
 	.key(d => d.film_year)
@@ -44,7 +50,7 @@ function plot_it()  {
 		count_max = Math.max(d.length, count_max)
 		return d.length
 	})
-	.entries(ted_talk_data)
+	.entries(ted_talk_data.filter(d => year_keys.includes(d.film_year)))
 
 	// scales
 	var x_scale = d3.scalePoint().domain(year_keys).range([0,lines_width]);
@@ -102,8 +108,9 @@ function plot_it()  {
 	.attr("text-anchor", "left")
 	.style("alignment-baseline", "middle")
 
-	// PARALLEL COORDINATES
-
+	/*
+	PARALLEL COORDINATES PLOT
+	*/
 	var parallel_width = lines_width, parallel_height = lines_height;
 	// define topic groups for x-axis
 	topic_groups = [['father', 'god', 'war', 'girl', 'parents'],
