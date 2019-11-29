@@ -10,8 +10,31 @@
 	<script type='text/javascript'>
 		d3.csv('data/labelled_data.csv')
 			.then(function(data)  {
-				ted_talk_data = data;
-				plot_it();
+				data.forEach(function(d) {
+					d.t1_weight = +d.t1_weight;
+					d.t2_weight = +d.t2_weight;
+					d.t3_weight = +d.t3_weight;
+					d.t4_weight = +d.t4_weight;
+					d.t5_weight = +d.t5_weight;
+					d.t6_weight = +d.t6_weight;
+					d.t7_weight = +d.t7_weight;
+					d.t8_weight = +d.t8_weight;
+					d.t9_weight = +d.t9_weight;
+					d.t10_weight = +d.t10_weight;
+					d.topic_pred_id = +d.topic_pred_id;
+					d.weights = [d.t1_weight,
+											 d.t2_weight,
+											 d.t3_weight,
+											 d.t4_weight,
+											 d.t5_weight,
+											 d.t6_weight,
+											 d.t7_weight,
+											 d.t8_weight,
+											 d.t9_weight,
+											 d.t10_weight];
+				})
+			ted_talk_data = data;
+			plot_it();
 			})
 	</script>
 	</body>
