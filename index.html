@@ -6,17 +6,36 @@
 		<script type='text/javascript' src='d3.js'></script>
 	</head>
 	<body>
-	<script type='text/javascript' src='lollipop.js'></script>
+	<script type='text/javascript' src='vis.js'></script>
 	<script type='text/javascript'>
-		Promise.all(
-			[d3.csv('data/labelled_data.csv'),
-			d3.csv('data/demo_topic_tag.csv')]
-		)
-		.then(function(data)  {
-			ted_talk_data = data[0];
-			topic_tag_data = data[1];
+		d3.csv('data/labelled_data.csv')
+			.then(function(data)  {
+				data.forEach(function(d) {
+					d.t1_weight = +d.t1_weight;
+					d.t2_weight = +d.t2_weight;
+					d.t3_weight = +d.t3_weight;
+					d.t4_weight = +d.t4_weight;
+					d.t5_weight = +d.t5_weight;
+					d.t6_weight = +d.t6_weight;
+					d.t7_weight = +d.t7_weight;
+					d.t8_weight = +d.t8_weight;
+					d.t9_weight = +d.t9_weight;
+					d.t10_weight = +d.t10_weight;
+					d.topic_pred_id = +d.topic_pred_id;
+					d.weights = [d.t1_weight,
+											 d.t2_weight,
+											 d.t3_weight,
+											 d.t4_weight,
+											 d.t5_weight,
+											 d.t6_weight,
+											 d.t7_weight,
+											 d.t8_weight,
+											 d.t9_weight,
+											 d.t10_weight];
+				})
+			ted_talk_data = data;
 			plot_it();
-		})
+			})
 	</script>
 	</body>
 </html>
