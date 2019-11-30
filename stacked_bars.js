@@ -124,6 +124,4 @@ function plot_it()  {
 		.attr("font-size", "15px")
 		.attr('fill', 'black')
 
-
-
 }
