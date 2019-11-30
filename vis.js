@@ -8,6 +8,7 @@ function plot_it()  {
 	/*
 	TOPICS BY YEAR PLOT
 	*/
+	var brush = d3.brushX()
 	var year_keys = ["2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"]
 
 	var svg = d3.select('body').append('svg').attr('width', 1000).attr('height', 1000).attr('transform', 'translate(5,5)')
@@ -26,6 +27,10 @@ function plot_it()  {
 	d3.select('#lines').append('g').attr('id', 'yaxis')
 	// group that will contain x axis for both our line plot and heatmap (id: xaxis)
 	d3.select('#lines').append('g').attr('id', 'xaxis')
+
+	// add brush to time-topic line plot
+	brush.extent([[0,lines_height-8],[lines_width,lines_height+8]])
+	d3.select('#lines').call(brush)
 
 	var colors = ["#a6cee3",
 		"#1f78b4",
@@ -108,6 +113,41 @@ function plot_it()  {
 	.attr("text-anchor", "left")
 	.style("alignment-baseline", "middle")
 
+	// brushing on years to update parallel coordinates
+	function update_lines(years) {
+		var brushed_data = ted_talk_data.filter(d => years.includes(d.film_year))
+		d3.select('#parallel').selectAll('.p_line').data(brushed_data)
+				.attr('d', d => line(d.weights))
+				.attr('fill', 'none')
+				.attr('stroke', '#4575b4')
+				.attr('stroke-opacity', '1')
+				.attr('stroke-width', '1')
+	}
+
+	function reset_lines() {
+		d3.select('#parallel').selectAll('.p_line')
+				.attr('stroke', '#4575b4')
+				.attr('stroke-opacity', '0.1')
+				.attr('stroke-width', '1')
+	}
+
+	brush.on('brush', function() {
+		var line_select = d3.event.selection;
+		var min_year_idx = line_select[0] / (lines_width / (year_keys.length-1))
+		var max_year_idx = line_select[1] / (lines_width / (year_keys.length-1))
+
+		var brushed_years = [];
+		for (var i = 0; i < year_keys.length; i++) {
+			if (i >= min_year_idx && i <= max_year_idx) {
+				brushed_years.push(year_keys[i]);
+			}
+		}
+		reset_lines();
+		if (brushed_years.length > 0) {
+			update_lines(brushed_years);
+		}
+	});
+
 	/*
 	PARALLEL COORDINATES PLOT
 	*/
@@ -165,7 +205,7 @@ function plot_it()  {
 			.attr('fill', '#d73027')
 			.attr('x', parallel_width/2)
 			.attr('y', -10)
-			.text('Talk Title: ' + d.name)
+			.text('Title: ' + d.title)
 	}
 
 	function remove_talk(d) {
@@ -173,7 +213,8 @@ function plot_it()  {
 	}
 
 	// data join for lines
-	d3.select('#parallel').selectAll('.p_line').data(ted_talk_data).enter().append('path')
+	p_selection = d3.select('#parallel').selectAll('.p_line').data(ted_talk_data)
+	p_selection.enter().append('path')
 		.attr('class', 'p_line')
 		.attr('d', d => line(d.weights))
 		.attr('fill', 'none')
