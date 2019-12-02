@@ -125,7 +125,7 @@ function plot_it()  {
 				remove_topic_highlight(d);
 			});
 		*/
-		
+
 	// axes
 	d3.select('#lines').select('#xaxis')
 	.attr('transform', 'translate('+'0'+','+ lines_height+')')
@@ -170,7 +170,6 @@ function plot_it()  {
 				.attr('stroke', brushed_line_color)
 				.attr('stroke-opacity', brushed_line_opacity)
 				.attr('stroke-width', '1')
-				.raise()
 	}
 
 	function reset_lines() {
@@ -191,7 +190,6 @@ function plot_it()  {
 				brushed_years.push(year_keys[i]);
 			}
 		}
-
 		reset_lines();
 		if (brushed_years.length > 0) {
 			update_lines(brushed_years);
@@ -341,8 +339,6 @@ function plot_it()  {
 
 	function brush() {
 		var line_select = d3.event.selection;
-		//
-		console.log(line_select);
 	}
 
 
