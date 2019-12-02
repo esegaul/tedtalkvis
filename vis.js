@@ -69,6 +69,32 @@ function plot_it()  {
 	var y_scale = d3.scaleLinear().domain([0, count_max]).range([lines_height,0]);
 	var line = d3.line().x(d => x_scale(d.key)).y(d => y_scale(d.value))
 
+	// display topic text on mouseover
+	function display_topic(d) {
+		d3.select('#lines').append('text')
+			.attr('class', 'topic')
+			.attr('text-anchor', 'middle')
+			.attr('fill', brushed_line_color)
+			.attr('x', lines_width/2)
+			.attr('y', 5)
+			.text('Topic: ' + topic_groups[d.key])
+	}
+	// remove text on mouseout
+	function remove_topic_text(d) {
+		d3.select('.topic').remove()
+	}
+
+	// highlight topic on x-axis on mouseover
+	function highlight_topic_axis(d) {
+		d3.selectAll('.x_text_' + d.key)
+			.attr('fill', brushed_line_color)
+	}
+
+	// remove topic highlight on mouseout
+	function remove_topic_highlight(d) {
+		d3.selectAll('.x_text_' + d.key)
+			.attr('fill', 'black')
+	}
 	// data join
 	var update_selection = d3.select('#lines').selectAll('.line_mark').data(nested_data)
 	update_selection.enter().append('path')
@@ -80,9 +106,26 @@ function plot_it()  {
 		.attr('stroke', d => colors[d.key])
 		.attr('stroke-width', '2.5')
 		.attr('opacity', '1')
+		.attr('pointer-events', 'all')
 
-	update_selection.transition().duration(1200).attr('d', d => line(d))
+		/* FIXME:
+		Need to add rectangle over entire chart to capture mouse
 
+		d3.selectAll('.line_mark')
+			.on('mouseover', function(d) {
+				d3.select(this).raise()
+					.attr('stroke-width', '4')
+				display_topic(d);
+				highlight_topic_axis(d);
+			})
+			.on('mouseout', function(d) {
+				d3.select(this)
+					.attr('stroke-width', '2.5')
+				remove_topic_text(d);
+				remove_topic_highlight(d);
+			});
+		*/
+		
 	// axes
 	d3.select('#lines').select('#xaxis')
 	.attr('transform', 'translate('+'0'+','+ lines_height+')')
@@ -97,7 +140,7 @@ function plot_it()  {
 	yaxis.call(
 		d3.axisLeft(y_scale))
 
-	// addd legend
+	// add legend
 	d3.select('#lines').selectAll("circs")
 		.data(nested_data)
 		.enter()
@@ -266,6 +309,7 @@ function plot_it()  {
 		var height_delta = 20;
 		for (var j = 0; j < topic_groups[i].length; j++) {
 			d3.select('#parallel').append('text')
+				.attr('class', ('x_text_' + i))
 				.attr('text-anchor', 'middle')
 				.attr('fill', '#000')
 				.attr('font-size', '14px')
@@ -297,6 +341,7 @@ function plot_it()  {
 
 	function brush() {
 		var line_select = d3.event.selection;
+		//
 		console.log(line_select);
 	}
 
@@ -308,7 +353,7 @@ function plot_it()  {
 	*/
 
 	var bar_height = 800;
-	var bar_width = 400;
+	var bar_width = 350;
 	var bar_pad = 20;
 	var row_height = 60;
 
@@ -399,7 +444,6 @@ function plot_it()  {
 		'white': '#ffffff',
 		'black': '#000000'
 	};
-
 
 	var topic_bar_groups = d3.select('#barplot').selectAll('empty')
 		.data(stacked_data)
