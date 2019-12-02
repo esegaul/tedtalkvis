@@ -108,8 +108,7 @@ function plot_it()  {
 		.attr('opacity', '1')
 		.attr('pointer-events', 'all')
 
-		/* FIXME:
-		Need to add rectangle over entire chart to capture mouse
+		//Need to add rectangle over entire chart to capture mouse
 
 		d3.selectAll('.line_mark')
 			.on('mouseover', function(d) {
@@ -124,7 +123,6 @@ function plot_it()  {
 				remove_topic_text(d);
 				remove_topic_highlight(d);
 			});
-		*/
 		
 	// axes
 	d3.select('#lines').select('#xaxis')
@@ -452,14 +450,9 @@ function plot_it()  {
 		.attr('fill', d => color_palette[color_dict[d.key]])
 		.attr('transform', 'translate('+bar_pad+',0)');
 
-	topic_bar_groups.selectAll('g')
-		.data(d => d)
-		.enter()
-		.append('rect')
-		.attr('y', d => topic_scale(d.data.key))
-		.attr('height', row_height)
-		.attr('x', d => popularity_scale(d[0]))
-		.attr('width', d => popularity_scale(d[1])-popularity_scale(d[0]));
+	var div = d3.select("body").append("div")	
+		.attr("class", "tooltip")				
+		.style("opacity", 0);
 
 	d3.select('#barplot').selectAll('empty')
 		.data(topic_nest)
@@ -470,4 +463,31 @@ function plot_it()  {
 		.attr('y', d => topic_scale(d.key)+35)
 		.attr("font-size", "15px")
 		.attr('fill', 'black');
+
+		function getKeyByValue(object, value) {
+			return Object.keys(object).find(key => object[key].toFixed(5) === value.toFixed(5));
+		}
+		
+		topic_bar_groups.selectAll('g')
+		.data(d => d)
+		.enter()
+		.append('rect')
+		.attr('y', d => topic_scale(d.data.key))
+		.attr('height', row_height)
+		.attr('x', d => popularity_scale(d[0]))
+		.attr('width', d => popularity_scale(d[1])-popularity_scale(d[0]))
+		.on('mouseover', (d, i, g) => {
+			var perc = d[1]-d[0]
+			div.transition()
+				.duration(200)
+				.style('opacity', .9)
+			div .html(getKeyByValue(d.data.value, perc) + "<br\>" + perc.toFixed(2))
+				.style("left", (d3.event.pageX) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");	
+		})
+		.on('mouseout', () => {
+			div.transition()		
+                .duration(500)		
+                .style("opacity", 0);
+		})
 }
