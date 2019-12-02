@@ -464,27 +464,57 @@ function plot_it()  {
 		function getKeyByValue(object, value) {
 			return Object.keys(object).find(key => object[key].toFixed(5) === value.toFixed(5));
 		}
-		
-		topic_bar_groups.selectAll('g')
-		.data(d => d)
-		.enter()
-		.append('rect')
-		.attr('y', d => topic_scale(d.data.key))
-		.attr('height', row_height)
-		.attr('x', d => popularity_scale(d[0]))
-		.attr('width', d => popularity_scale(d[1])-popularity_scale(d[0]))
-		.on('mouseover', (d, i, g) => {
+
+		function showInfoBubble(d) {
 			var perc = d[1]-d[0]
 			div.transition()
 				.duration(200)
 				.style('opacity', .9)
 			div .html(getKeyByValue(d.data.value, perc) + "<br\>" + perc.toFixed(2))
 				.style("left", (d3.event.pageX) + "px")		
-                .style("top", (d3.event.pageY - 28) + "px");	
-		})
-		.on('mouseout', () => {
-			div.transition()		
-                .duration(500)		
-                .style("opacity", 0);
-		})
+                .style("top", (d3.event.pageY - 28) + "px");
+		}
+
+		function reset_bars() {
+			d3.select('#barplot').selectAll('g')
+				.style('fill', d => {
+					console.log(d)
+					console.log(color_palette[color_dict[d.key]])
+					return color_palette[color_dict[d.key]]
+				})
+		}
+		
+		topic_bar_groups.selectAll('g')
+			.data(d => d)
+			.enter()
+			.append('rect')
+			.attr('y', d => topic_scale(d.data.key))
+			.attr('height', row_height)
+			.attr('x', d => popularity_scale(d[0]))
+			.attr('width', d => popularity_scale(d[1])-popularity_scale(d[0]))
+			.on('mouseover', (d) => {
+					showInfoBubble(d)
+			})
+			.on('mouseout', () => {
+				div.transition()		
+					.duration(500)		
+					.style("opacity", 0);
+			})
+			.on('click', (d) => {
+				reset_lines()
+				reset_bars()
+
+				var perc = d[1]-d[0]
+				var top_rating = getKeyByValue(d.data.value, perc)
+				var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
+
+				d3.select(event.currentTarget).attr('fill', 'grey')
+
+				d3.select('#parallel').selectAll('.p_line').data(brushed_data)
+						.attr('stroke', brushed_line_color)
+						.attr('stroke-opacity', brushed_line_opacity)
+						.attr('stroke-width', '1')
+						.raise()
+				
+			})
 }
