@@ -1,12 +1,19 @@
 function plot_it()  {
 
+	// dimensions
 	var left_pad = 100, bottom_pad = 80;
 	var lines_width = 1000, lines_height = 400;
 	var right_pad = 25, y_pad = 40
 	var lines_width = lines_width-(left_pad+right_pad), lines_height = lines_height-2*y_pad;
 
+	// parameters for parallel coordinates appearance
+	var normal_line_color = '#4575b4', normal_line_opacity = '0.1';
+	var brushed_line_color = '#d73027', brushed_line_opacity = '0.7';
+
 	/*
+	*
 	TOPICS BY YEAR PLOT
+	*
 	*/
 	var brush = d3.brushX()
 	var year_keys = ["2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"]
@@ -41,7 +48,7 @@ function plot_it()  {
 		"#fdbf6f",
 		"#ff7f00",
 		"#cab2d6",
-		"#6a3d9a]"]
+		"#6a3d9a"]
 
 	var count_max = 0;
 
@@ -92,42 +99,41 @@ function plot_it()  {
 
 	// addd legend
 	d3.select('#lines').selectAll("circs")
-	.data(nested_data)
-	.enter()
-	.append("circle")
-	.attr('transform', 'translate('+(lines_width)+',-15)')
-	.attr("cx", 50)
-	.attr("cy", (d, i) => i*30)
-	.attr("r", 7)
-	.style("fill", d => colors[d.key])
+		.data(nested_data)
+		.enter()
+		.append("circle")
+		.attr('transform', 'translate('+(lines_width)+',-15)')
+		.attr("cx", 50)
+		.attr("cy", (d, i) => i*30)
+		.attr("r", 7)
+		.style("fill", d => colors[d.key])
 
 	d3.select('#lines').selectAll("labels")
-	.data(nested_data)
-	.enter()
-	.append("text")
-	.attr('transform', 'translate('+(lines_width)+',-15)')
-	.attr("x", 70)
-	.attr("y", (d, i) => i*30)
-	.style("fill", d => colors[d.key])
-	.text(d => d.key)
-	.attr("text-anchor", "left")
-	.style("alignment-baseline", "middle")
+		.data(nested_data)
+		.enter()
+		.append("text")
+		.attr('transform', 'translate('+(lines_width)+',-15)')
+		.attr("x", 70)
+		.attr("y", (d, i) => i*30)
+		.style("fill", d => colors[d.key])
+		.text(d => d.key)
+		.attr("text-anchor", "left")
+		.style("alignment-baseline", "middle")
 
 	// brushing on years to update parallel coordinates
 	function update_lines(years) {
 		var brushed_data = ted_talk_data.filter(d => years.includes(d.film_year))
 		d3.select('#parallel').selectAll('.p_line').data(brushed_data)
-				.attr('d', d => line(d.weights))
-				.attr('fill', 'none')
-				.attr('stroke', '#4575b4')
-				.attr('stroke-opacity', '1')
+				.attr('stroke', brushed_line_color)
+				.attr('stroke-opacity', brushed_line_opacity)
 				.attr('stroke-width', '1')
+				.raise()
 	}
 
 	function reset_lines() {
 		d3.select('#parallel').selectAll('.p_line')
-				.attr('stroke', '#4575b4')
-				.attr('stroke-opacity', '0.1')
+				.attr('stroke', normal_line_color)
+				.attr('stroke-opacity', normal_line_opacity)
 				.attr('stroke-width', '1')
 	}
 
@@ -142,6 +148,7 @@ function plot_it()  {
 				brushed_years.push(year_keys[i]);
 			}
 		}
+
 		reset_lines();
 		if (brushed_years.length > 0) {
 			update_lines(brushed_years);
@@ -149,9 +156,12 @@ function plot_it()  {
 	});
 
 	/*
+	*
 	PARALLEL COORDINATES PLOT
+	*
 	*/
 	var parallel_width = lines_width, parallel_height = lines_height;
+
 	// define topic groups for x-axis
 	topic_groups = [['father', 'god', 'war', 'girl', 'parents'],
 									['music', 'sound', 'playing', 'sounds', 'audience'],
@@ -180,17 +190,15 @@ function plot_it()  {
 	dimensions = d3.keys(ted_talk_data[0]).filter(function(d) { return d.includes('_weight') })
 
 	// scales
-	var weight_scales = []
+	var weight_scales = [];
   for (i in dimensions) {
-    name = dimensions[i]
+    var name = dimensions[i];
     weight_scales.push(d3.scaleLinear()
 			.range([parallel_height, 0])
 			//.domain([0, 0.4])
 			// optional: difference scale for each topic
 			.domain( d3.extent(ted_talk_data, function(d) { return d[name]; }) ))
-
   }
-
 	var topic_scale = d3.scalePoint().domain(d3.range(0, 10)).range([0, parallel_width]);
 
 	// create line object
@@ -198,17 +206,18 @@ function plot_it()  {
 			.x(function(d, i) {return topic_scale(i)})
 			.y(function(d, i) {return weight_scales[i](d)})
 
+	// display text on mouseover
 	function display_talk(d) {
 		d3.select('#parallel').append('text')
 			.attr('class', 'talk')
 			.attr('text-anchor', 'middle')
-			.attr('fill', '#d73027')
+			.attr('fill', brushed_line_color)
 			.attr('x', parallel_width/2)
 			.attr('y', -10)
 			.text('Title: ' + d.title)
 	}
-
-	function remove_talk(d) {
+	// remove text on mouseout
+	function remove_talk_text(d) {
 		d3.select('.talk').remove()
 	}
 
@@ -218,22 +227,34 @@ function plot_it()  {
 		.attr('class', 'p_line')
 		.attr('d', d => line(d.weights))
 		.attr('fill', 'none')
-		.attr('stroke', '#4575b4')
-		.attr('stroke-opacity', '0.1')
+		.attr('stroke', normal_line_color)
+		.attr('stroke-opacity', normal_line_opacity)
 		.attr('stroke-width', '1')
 		.on('mouseover', function(d) {
+			// highlight line on mouseover
 			display_talk(d);
 			d3.select(this).raise()
-				.style('stroke','#d73027')
+				.style('stroke',brushed_line_color)
 				.style('stroke-opacity', '1')
 				.style('stroke-width', '2')
     })
 		.on('mouseout', function(d) {
-			remove_talk(d);
-			d3.select(this)
-				.style('stroke','#4575b4')
-				.style('stroke-opacity', '0.1')
-				.style('stroke-width', '0.5')
+			// remove highlight on mouseout
+			remove_talk_text(d);
+			if (d3.select(this).attr('stroke') == brushed_line_color) {
+				// line is brushed from year line-plot
+				d3.select(this)
+					.style('stroke', brushed_line_color)
+					.style('stroke-opacity', brushed_line_opacity)
+					.style('stroke-width', '1')
+			}
+			else {
+				d3.select(this)
+					.style('stroke', normal_line_color)
+					.style('stroke-opacity', normal_line_opacity)
+					.style('stroke-width', '1')
+			}
+
 	  });
 
 	// x-axis
@@ -262,8 +283,9 @@ function plot_it()  {
 		.attr('class', 'yaxis')
     .each(function(d, i) { d3.select(this).call(d3.axisLeft().scale(weight_scales[i])); })
 
-	// FIXME: BRUSH ON EACH Y-AXIS
-	/*
+	/* FIXME: BRUSH ON EACH Y-AXIS
+ 	* Throws error: "Uncaught TypeError: group.property is not a function"
+	*/
 	// brush on each y-axis
 	y_axes.append('g')
 	.attr('class', 'brush')
@@ -277,7 +299,6 @@ function plot_it()  {
 		var line_select = d3.event.selection;
 		console.log(line_select);
 	}
-	*/
 
 
 	/*
@@ -290,26 +311,26 @@ function plot_it()  {
 	var bar_width = 400;
 	var bar_pad = 20;
 	var row_height = 60;
-		
+
 	var ratings = Array.from(new Set(ted_talk_data.map(d => d.top_rating)))
 
 	var topic_scale = d3.scaleBand()
 		.domain(Array.from(new Set(ted_talk_data.map(d => d.topic_pred_id))))
 		.range([bar_height, 0])
 		.paddingInner(0.2);
-	
+
 	var popularity_scale = d3.scaleLinear()
 		.domain([0, 1])
 		.range([0, bar_width]);
-	
+
 	var topic_nest = d3.nest()
 		.key(d => d.topic_pred_id)
-		.rollup(d => { 
+		.rollup(d => {
 			var dict = {};
 			for(var i=0; i<ratings.length; ++i) {
 				dict[ratings[i]] = (d.filter(video => ratings[i] == video.top_rating).length) / d.length;
 			}
-			return dict;	
+			return dict;
 		})
 		.entries(ted_talk_data);
 
@@ -318,7 +339,7 @@ function plot_it()  {
 		.value((d, key) => {
 			return d.value[key];
 		});
-	
+
 	var stacked_data = topic_stack(topic_nest);
 
 	d3.select('svg').append('g').attr('id', 'barplot')
@@ -363,16 +384,16 @@ function plot_it()  {
 		'purple': '#911eb4',
 		'teal': '#46f0f0',
 		'magenta': '#f032e6',
-		'lime': '#bcf60c', 
+		'lime': '#bcf60c',
 		'pink': '#fabebe',
 		'teal': '#008080',
-		'lavender': '#e6beff', 
+		'lavender': '#e6beff',
 		'brown': '#9a6324',
 		'beige': '#fffac8',
 		'maroon': '#800000',
 		'mint': '#aaffc3',
-		'olive': '#808000', 
-		'apricot': '#ffd8b1', 
+		'olive': '#808000',
+		'apricot': '#ffd8b1',
 		'navy': '#000075',
 		'grey':'#808080',
 		'white': '#ffffff',
@@ -386,7 +407,7 @@ function plot_it()  {
 		.append('g')
 		.attr('fill', d => color_palette[color_dict[d.key]])
 		.attr('transform', 'translate('+bar_pad+',0)');
-	
+
 	topic_bar_groups.selectAll('g')
 		.data(d => d)
 		.enter()
