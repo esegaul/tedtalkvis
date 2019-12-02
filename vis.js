@@ -401,6 +401,7 @@ function plot_it()  {
 		.enter()
 		.append('text')
 		.text(d => topic_dict[d.key])
+		.attr('x', bar_width+30)
 		.attr('y', d => topic_scale(d.key)+35)
 		.attr("font-size", "15px")
 		.attr('fill', 'black');
