@@ -290,7 +290,7 @@ function plot_it()  {
 		var brushed_lines = ted_talk_data.filter(d => (d.weights[t_id] >= min_weight) && (d.weights[t_id] <= max_weight))
 
 		// FIXME: highlighting wrong lines
-		d3.select('#parallel').selectAll('.p_line').data(brushed_lines)
+		d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.name)
 			.attr('stroke', brushed_line_color)
 			.attr('stroke-opacity', brushed_line_opacity)
 			.attr('stroke-width', '1')
@@ -440,16 +440,9 @@ function plot_it()  {
             .style("top", (d3.event.pageY - 28) + "px");
 	}
 
-	/*
 		function reset_bars() {
-			d3.select('#barplot').selectAll('rect')
-				.attr('fill', d => {
-					var perc = d[1]-d[0]
-					console.log(d3.event.currentTarget.getAttribute('x'))
-					return color_palette[color_dict[getKeyByValue(d, perc)]]
-				})
+		
 		}
-	*/
 
 		topic_bar_groups.selectAll('g')
 			.data(d => d)
@@ -473,10 +466,8 @@ function plot_it()  {
 				var perc = d[1]-d[0]
 				var top_rating = getKeyByValue(d, perc)
 				var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
-
-				// FIXME: highlighting wrong lines
 				//d3.select(event.currentTarget).attr('fill', 'grey')
-				d3.select('#parallel').selectAll('.p_line').data(brushed_data)
+				d3.select('#parallel').selectAll('.p_line').data(brushed_data, d => d.name)
 						.attr('stroke', brushed_line_color)
 						.attr('stroke-opacity', brushed_line_opacity)
 						.attr('stroke-width', '1')
