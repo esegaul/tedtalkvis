@@ -15,7 +15,6 @@ function plot_it()  {
 	TOPICS BY YEAR PLOT
 	*
 	*/
-	var brush = d3.brushX()
 	var year_keys = ["2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"]
 
 	var svg = d3.select('body').append('svg').attr('width', 1700).attr('height', 1000).attr('transform', 'translate(5,5)')
@@ -34,12 +33,6 @@ function plot_it()  {
 	d3.select('#lines').append('g').attr('id', 'yaxis')
 	// group that will contain x axis for both our line plot and heatmap (id: xaxis)
 	d3.select('#lines').append('g').attr('id', 'xaxis')
-
-	// add brush to time-topic line plot
-	brush.extent([[0, -8],[lines_width, 8]])
-	d3.select('#lines').selectAll('#xaxis').append('g')
-		.attr('class', 'brush_x')
-		.call(brush)
 
 	var colors = ["#a6cee3",
 		"#1f78b4",
@@ -151,39 +144,6 @@ function plot_it()  {
 		.text(d => d.key)
 		.attr("text-anchor", "left")
 		.style("alignment-baseline", "middle")
-
-	// brushing on years to update parallel coordinates
-	function update_lines(years) {
-		var brushed_data = ted_talk_data.filter(d => years.includes(d.film_year))
-		d3.select('#parallel').selectAll('.p_line').data(brushed_data)
-				.attr('stroke', brushed_line_color)
-				.attr('stroke-opacity', brushed_line_opacity)
-				.attr('stroke-width', '1')
-	}
-
-	function reset_lines() {
-		d3.select('#parallel').selectAll('.p_line')
-				.attr('stroke', normal_line_color)
-				.attr('stroke-opacity', normal_line_opacity)
-				.attr('stroke-width', '1')
-	}
-
-	brush.on('brush', function() {
-		var line_select = d3.event.selection;
-		var min_year_idx = line_select[0] / (lines_width / (year_keys.length-1))
-		var max_year_idx = line_select[1] / (lines_width / (year_keys.length-1))
-
-		var brushed_years = [];
-		for (var i = 0; i < year_keys.length; i++) {
-			if (i >= min_year_idx && i <= max_year_idx) {
-				brushed_years.push(year_keys[i]);
-			}
-		}
-		reset_lines();
-		if (brushed_years.length > 0) {
-			update_lines(brushed_years);
-		}
-	});
 
 	/*
 	*
@@ -307,29 +267,44 @@ function plot_it()  {
 		}
 	}
 
-	// y-axes
-	var y_axes = d3.select('#parallel').selectAll('#yaxis')
-    .data(dimensions).enter().append('g')
+	// y-axes -- use dummy data (range of numbers 0-9) for join
+	var y_axes = d3.select('#parallel').selectAll('.yaxis')
+    .data(d3.range(0, 10)).enter().append('g')
     .attr("transform", function(d, i) { return 'translate(' + topic_scale(i) + ',0)'; })
 		.attr('class', 'yaxis')
     .each(function(d, i) { d3.select(this).call(d3.axisLeft().scale(weight_scales[i])); })
 
-	/* FIXME: BRUSH ON EACH Y-AXIS
- 	* Throws error: "Uncaught TypeError: group.property is not a function"
-	*/
-	// brush on each y-axis
+		function reset_lines() {
+			d3.select('#parallel').selectAll('.p_line')
+					.attr('stroke', normal_line_color)
+					.attr('stroke-opacity', normal_line_opacity)
+					.attr('stroke-width', '1')
+		}
+	// function for brushing on each parallel axis
+	function brush_axis() {
+		reset_lines();
+		t_id = d3.select(this).data()[0];
+		w_scale = weight_scales[t_id];
+		var line_select = d3.event.selection;
+		var max_weight = w_scale.invert(line_select[0]), min_weight = w_scale.invert(line_select[1]);
+		var brushed_lines = ted_talk_data.filter(d => (d.weights[t_id] >= min_weight) && (d.weights[t_id] <= max_weight))
+
+		// FIXME: highlighting wrong lines
+		d3.select('#parallel').selectAll('.p_line').data(brushed_lines)
+			.attr('stroke', brushed_line_color)
+			.attr('stroke-opacity', brushed_line_opacity)
+			.attr('stroke-width', '1')
+			.raise()
+	}
+
+	// place brush on each y-axis
 	y_axes.append('g')
 	.attr('class', 'brush')
 	.each(function(d, i) {
 		d3.select(this).call(weight_scales[i].brush = d3.brushY()
 			.extent([[-8, 0], [8, parallel_height]])
-			.on('brush', brush));
+			.on('brush', brush_axis))
 	})
-
-	function brush() {
-		var line_select = d3.event.selection;
-	}
-
 
 	/*
 	*
@@ -461,7 +436,7 @@ function plot_it()  {
 			.duration(200)
 			.style('opacity', .9)
 		div .html(getKeyByValue(d, perc) + "<br\>" + perc.toFixed(2))
-			.style("left", (d3.event.pageX) + "px")		
+			.style("left", (d3.event.pageX) + "px")
             .style("top", (d3.event.pageY - 28) + "px");
 	}
 
@@ -475,7 +450,7 @@ function plot_it()  {
 				})
 		}
 	*/
-		
+
 		topic_bar_groups.selectAll('g')
 			.data(d => d)
 			.enter()
@@ -488,8 +463,8 @@ function plot_it()  {
 					showInfoBubble(d)
 			})
 			.on('mouseout', () => {
-				div.transition()		
-					.duration(500)		
+				div.transition()
+					.duration(500)
 					.style("opacity", 0);
 			})
 			.on('click', (d) => {
@@ -499,12 +474,12 @@ function plot_it()  {
 				var top_rating = getKeyByValue(d, perc)
 				var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
 
+				// FIXME: highlighting wrong lines
 				//d3.select(event.currentTarget).attr('fill', 'grey')
 				d3.select('#parallel').selectAll('.p_line').data(brushed_data)
 						.attr('stroke', brushed_line_color)
 						.attr('stroke-opacity', brushed_line_opacity)
 						.attr('stroke-width', '1')
 						.raise()
-				
 			})
 }
