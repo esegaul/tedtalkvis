@@ -451,8 +451,8 @@ function plot_it()  {
 		.attr("font-size", "15px")
 		.attr('fill', 'black');
 
-	function getKeyByValue(object, value) {
-		return Object.keys(object).find(key => object[key].toFixed(5) === value.toFixed(5));
+	function getKeyByValue(d, value) {
+		return Object.keys(d.data.value).find(key => d.data.value[key].toFixed(8) === value.toFixed(8));
 	}
 
 	function showInfoBubble(d) {
@@ -460,19 +460,21 @@ function plot_it()  {
 		div.transition()
 			.duration(200)
 			.style('opacity', .9)
-		div .html(getKeyByValue(d.data.value, perc) + "<br\>" + perc.toFixed(2))
+		div .html(getKeyByValue(d, perc) + "<br\>" + perc.toFixed(2))
 			.style("left", (d3.event.pageX) + "px")		
             .style("top", (d3.event.pageY - 28) + "px");
 	}
 
+	/*
 		function reset_bars() {
-			d3.select('#barplot').selectAll('g')
-				.style('fill', d => {
-					console.log(d)
-					console.log(color_palette[color_dict[d.key]])
-					return color_palette[color_dict[d.key]]
+			d3.select('#barplot').selectAll('rect')
+				.attr('fill', d => {
+					var perc = d[1]-d[0]
+					console.log(d3.event.currentTarget.getAttribute('x'))
+					return color_palette[color_dict[getKeyByValue(d, perc)]]
 				})
 		}
+	*/
 		
 		topic_bar_groups.selectAll('g')
 			.data(d => d)
@@ -492,14 +494,13 @@ function plot_it()  {
 			})
 			.on('click', (d) => {
 				reset_lines()
-				reset_bars()
-
+				//reset_bars()
 				var perc = d[1]-d[0]
-				var top_rating = getKeyByValue(d.data.value, perc)
+				var top_rating = getKeyByValue(d, perc)
 				var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
 
-				d3.select(event.currentTarget).attr('fill', 'grey')
-			d3.select('#parallel').selectAll('.p_line').data(brushed_data)
+				//d3.select(event.currentTarget).attr('fill', 'grey')
+				d3.select('#parallel').selectAll('.p_line').data(brushed_data)
 						.attr('stroke', brushed_line_color)
 						.attr('stroke-opacity', brushed_line_opacity)
 						.attr('stroke-width', '1')
