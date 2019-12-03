@@ -15,7 +15,7 @@ function plot_it()  {
 	TOPICS BY YEAR PLOT
 	*
 	*/
-	var year_keys = ["2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017"]
+	var year_keys = ["2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016"]
 
 	var svg = d3.select('body').append('svg').attr('width', 1700).attr('height', 1000).attr('transform', 'translate(5,5)')
 	// group that will contain line plot (id: lines)
@@ -121,29 +121,6 @@ function plot_it()  {
 
 	yaxis.call(
 		d3.axisLeft(y_scale))
-
-	// add legend
-	d3.select('#lines').selectAll("circs")
-		.data(nested_data)
-		.enter()
-		.append("circle")
-		.attr('transform', 'translate('+(lines_width)+',-15)')
-		.attr("cx", 50)
-		.attr("cy", (d, i) => i*30)
-		.attr("r", 7)
-		.style("fill", d => colors[d.key])
-
-	d3.select('#lines').selectAll("labels")
-		.data(nested_data)
-		.enter()
-		.append("text")
-		.attr('transform', 'translate('+(lines_width)+',-15)')
-		.attr("x", 70)
-		.attr("y", (d, i) => i*30)
-		.style("fill", d => colors[d.key])
-		.text(d => d.key)
-		.attr("text-anchor", "left")
-		.style("alignment-baseline", "middle")
 
 	/*
 	*
