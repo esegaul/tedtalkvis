@@ -36,8 +36,10 @@ function plot_it()  {
 	d3.select('#lines').append('g').attr('id', 'xaxis')
 
 	// add brush to time-topic line plot
-	brush.extent([[0,lines_height-8],[lines_width,lines_height+8]])
-	d3.select('#lines').call(brush)
+	brush.extent([[0, -8],[lines_width, 8]])
+	d3.select('#lines').selectAll('#xaxis').append('g')
+		.attr('class', 'brush_x')
+		.call(brush)
 
 	var colors = ["#a6cee3",
 		"#1f78b4",
@@ -69,8 +71,8 @@ function plot_it()  {
 	var y_scale = d3.scaleLinear().domain([0, count_max]).range([lines_height,0]);
 	var line = d3.line().x(d => x_scale(d.key)).y(d => y_scale(d.value))
 
-	// display topic text on mouseover
-	function display_topic(d) {
+	// display topic text and highlight topic text on mouseover
+	function display_topic_text(d) {
 		d3.select('#lines').append('text')
 			.attr('class', 'topic')
 			.attr('text-anchor', 'middle')
@@ -78,23 +80,17 @@ function plot_it()  {
 			.attr('x', lines_width/2)
 			.attr('y', 5)
 			.text('Topic: ' + topic_groups[d.key])
-	}
-	// remove text on mouseout
-	function remove_topic_text(d) {
-		d3.select('.topic').remove()
-	}
-
-	// highlight topic on x-axis on mouseover
-	function highlight_topic_axis(d) {
 		d3.selectAll('.x_text_' + d.key)
 			.attr('fill', brushed_line_color)
 	}
 
-	// remove topic highlight on mouseout
-	function remove_topic_highlight(d) {
+	// remove topic highlight and topic text highlight on mouseout
+	function remove_topic_text(d) {
 		d3.selectAll('.x_text_' + d.key)
 			.attr('fill', 'black')
+		d3.select('.topic').remove()
 	}
+
 	// data join
 	var update_selection = d3.select('#lines').selectAll('.line_mark').data(nested_data)
 	update_selection.enter().append('path')
@@ -104,26 +100,20 @@ function plot_it()  {
 		})
 		.attr('fill', 'none')
 		.attr('stroke', d => colors[d.key])
-		.attr('stroke-width', '2.5')
+		.attr('stroke-width', '3')
 		.attr('opacity', '1')
-		.attr('pointer-events', 'all')
-/*
-		//Need to add rectangle over entire chart to capture mouse
 
-		d3.selectAll('.line_mark')
+		d3.select('#lines').selectAll('.line_mark')
 			.on('mouseover', function(d) {
 				d3.select(this).raise()
-					.attr('stroke-width', '4')
-				display_topic(d);
-				highlight_topic_axis(d);
+					.attr('stroke-width', '5')
+				display_topic_text(d);
 			})
 			.on('mouseout', function(d) {
 				d3.select(this)
-					.attr('stroke-width', '2.5')
+					.attr('stroke-width', '3')
 				remove_topic_text(d);
-				remove_topic_highlight(d);
 			});
-*/
 
 	// axes
 	d3.select('#lines').select('#xaxis')
@@ -447,8 +437,8 @@ function plot_it()  {
 		.attr('fill', d => color_palette[color_dict[d.key]])
 		.attr('transform', 'translate('+bar_pad+',0)');
 
-	var div = d3.select("body").append("div")	
-		.attr("class", "tooltip")				
+	var div = d3.select("body").append("div")
+		.attr("class", "tooltip")
 		.style("opacity", 0);
 
 	d3.select('#barplot').selectAll('empty')
@@ -461,19 +451,19 @@ function plot_it()  {
 		.attr("font-size", "15px")
 		.attr('fill', 'black');
 
-		function getKeyByValue(object, value) {
-			return Object.keys(object).find(key => object[key].toFixed(5) === value.toFixed(5));
-		}
+	function getKeyByValue(object, value) {
+		return Object.keys(object).find(key => object[key].toFixed(5) === value.toFixed(5));
+	}
 
-		function showInfoBubble(d) {
-			var perc = d[1]-d[0]
-			div.transition()
-				.duration(200)
-				.style('opacity', .9)
-			div .html(getKeyByValue(d.data.value, perc) + "<br\>" + perc.toFixed(2))
-				.style("left", (d3.event.pageX) + "px")		
-                .style("top", (d3.event.pageY - 28) + "px");
-		}
+	function showInfoBubble(d) {
+		var perc = d[1]-d[0]
+		div.transition()
+			.duration(200)
+			.style('opacity', .9)
+		div .html(getKeyByValue(d.data.value, perc) + "<br\>" + perc.toFixed(2))
+			.style("left", (d3.event.pageX) + "px")		
+            .style("top", (d3.event.pageY - 28) + "px");
+	}
 
 		function reset_bars() {
 			d3.select('#barplot').selectAll('g')
@@ -509,8 +499,7 @@ function plot_it()  {
 				var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
 
 				d3.select(event.currentTarget).attr('fill', 'grey')
-
-				d3.select('#parallel').selectAll('.p_line').data(brushed_data)
+			d3.select('#parallel').selectAll('.p_line').data(brushed_data)
 						.attr('stroke', brushed_line_color)
 						.attr('stroke-opacity', brushed_line_opacity)
 						.attr('stroke-width', '1')
