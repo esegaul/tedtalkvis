@@ -403,7 +403,13 @@ function plot_it()  {
 	var stacked_data = topic_stack(topic_nest);
 
 	d3.select('svg').append('g').attr('id', 'barplot')
-		.attr('transform', 'translate('+(lines_width+200)+',0)');
+		.attr('transform', 'translate('+(lines_width+200)+',40)');
+	
+	d3.select('svg').append('text').attr('id', 'barplot_title')
+		.text('Viewer Ratings by Topic')
+		.attr('transform', 'translate('+(lines_width+290)+',20)')
+		.attr("font-size", "20px")
+		.attr('fill', 'black');
 
 	var color_dict = {
 		'Inspiring': 'red',
