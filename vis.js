@@ -263,7 +263,7 @@ function plot_it()  {
 	}
 
 	// data join for lines
-	p_selection = d3.select('#parallel').selectAll('.p_line').data(ted_talk_data)
+	p_selection = d3.select('#parallel').selectAll('.p_line').data(ted_talk_data, d => d.weights)
 	p_selection.enter().append('path')
 		.attr('class', 'p_line')
 		.attr('d', d => line(d.weights))
@@ -275,9 +275,10 @@ function plot_it()  {
 			// highlight line on mouseover
 			display_talk(d);
 			d3.select(this).raise()
-				.style('stroke',brushed_line_color)
+				.style('stroke', highlight_color)
 				.style('stroke-opacity', '1')
 				.style('stroke-width', '2')
+
 			d3.select('#parallel').selectAll('.yaxis').raise();
     })
 		.on('mouseout', function(d) {
@@ -333,7 +334,7 @@ function plot_it()  {
 		}
 	// function for brushing on each parallel axis
 	function brush_axis() {
-		//reset_lines();
+		reset_lines();
 		t_id = d3.select(this).data()[0];
 		w_scale = weight_scales[t_id];
 		var line_select = d3.event.selection;
@@ -341,7 +342,7 @@ function plot_it()  {
 		var brushed_lines = ted_talk_data.filter(d => (d.weights[t_id] >= min_weight) && (d.weights[t_id] <= max_weight))
 
 		// FIXME: interferes with mouse hover on lines, and can't do multiple brushes
-		var data_join = d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.name)
+		var data_join = d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.weights)
 			.attr('stroke', brushed_line_color)
 			.attr('stroke-opacity', brushed_line_opacity)
 			.raise()
