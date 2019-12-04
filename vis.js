@@ -375,7 +375,7 @@ function plot_it()  {
 	var ratings = Array.from(new Set(ted_talk_data.map(d => d.top_rating)))
 
 	var topic_scale = d3.scaleBand()
-		.domain(Array.from(new Set(ted_talk_data.map(d => d.topic_pred_id))))
+		.domain([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].reverse())
 		.range([bar_height, 0])
 		.paddingInner(0.2);
 
