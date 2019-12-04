@@ -50,7 +50,7 @@ function plot_it()  {
 	// sort talks by film_year
 	ted_talk_data.sort((a, b) => (a.film_year > b.film_year) ? 1 : -1)
 
-	// track encountered 
+	// track encountered
 	var encountered = Array(10).fill(0)
 
 	// create array for missing years
@@ -72,7 +72,7 @@ function plot_it()  {
 		if (!encountered[cur_id]) {
 			encountered[cur_id] = 1
 			if (cur_year != year_keys[0]) {
-				var n = 0; 
+				var n = 0;
 				while (year_keys[n] != cur_year) {
 					missing_years[cur_id].push(year_keys[n])
 					n++;
@@ -83,8 +83,6 @@ function plot_it()  {
 		else {
 			while ((Number(prev_year) + 1).toString() != cur_year) {
 				prev_year = (Number(prev_year) + 1).toString();
-				console.log(prev_year)
-				console.log(cur_year)
 				missing_years[cur_id].push(prev_year)
 			}
 		}
@@ -122,13 +120,22 @@ function plot_it()  {
 			.text('Topic: ' + topic_groups[d.key])
 		d3.selectAll('.x_text_' + d.key)
 			.attr('fill', brushed_line_color)
+			.attr('font-weight', 'bolder')
+		d3.selectAll('.bar_text_' + d.key)
+			.attr('fill', brushed_line_color)
+			.attr('font-weight', 'bolder')
 	}
 
 	// remove topic highlight and topic text highlight on mouseout
 	function remove_topic_text(d) {
 		d3.selectAll('.x_text_' + d.key)
 			.attr('fill', 'black')
+			.attr('font-weight', 'normal')
+		d3.selectAll('.bar_text_' + d.key)
+			.attr('fill', 'black')
+			.attr('font-weight', 'normal')
 		d3.select('.topic').remove()
+
 	}
 
 	// data join
@@ -445,6 +452,7 @@ function plot_it()  {
 		.enter()
 		.append('text')
 		.text(d => topic_dict[d.key])
+		.attr('class', d => 'bar_text_' + d.key)
 		.attr('x', bar_width+30)
 		.attr('y', d => topic_scale(d.key)+35)
 		.attr("font-size", "15px")
@@ -465,7 +473,7 @@ function plot_it()  {
 	}
 
 		function reset_bars() {
-		
+
 		}
 
 		topic_bar_groups.selectAll('g')
