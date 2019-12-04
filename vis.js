@@ -1,5 +1,14 @@
 function plot_it()  {
 
+	/*
+	TO-DO:
+	- re-order reaction bars to be in the same order as the topics on x-axis of pcoords
+	- add functionality for using muliple brushes at word_indices
+	- change line colors upon reaction-selection to match the color of the bar clicked
+	- convert time-line plot to stacked areas with clamping to nearest year
+	 	(to highlight year-top_topic lines on interaction, not just top_topic)
+	*/
+
 	// dimensions
 	var left_pad = 100, bottom_pad = 80;
 	var lines_width = 1000, lines_height = 400;
@@ -7,9 +16,9 @@ function plot_it()  {
 	var lines_width = lines_width-(left_pad+right_pad), lines_height = lines_height-2*y_pad;
 
 	// parameters for parallel coordinates appearance
-	var normal_line_color = '#4575b4', normal_line_opacity = '0.1';
-	var brushed_line_color = '#d73027', brushed_line_opacity = '0.7';
-
+	var normal_line_color = '#bababa', normal_line_opacity = '0.2';
+	var brushed_line_color = 'steelblue', brushed_line_opacity = '0.7';
+	var highlight_color = '#d7191c'
 	/*
 	*
 	TOPICS BY YEAR PLOT
@@ -114,15 +123,16 @@ function plot_it()  {
 		d3.select('#lines').append('text')
 			.attr('class', 'topic')
 			.attr('text-anchor', 'middle')
-			.attr('fill', brushed_line_color)
+			.attr('fill', highlight_color)
 			.attr('x', lines_width/2)
 			.attr('y', 5)
+			.attr('font-weight', 'bolder')
 			.text('Topic: ' + topic_groups[d.key])
 		d3.selectAll('.x_text_' + d.key)
-			.attr('fill', brushed_line_color)
+			.attr('fill', highlight_color)
 			.attr('font-weight', 'bolder')
 		d3.selectAll('.bar_text_' + d.key)
-			.attr('fill', brushed_line_color)
+			.attr('fill', highlight_color)
 			.attr('font-weight', 'bolder')
 	}
 
@@ -149,18 +159,27 @@ function plot_it()  {
 		.attr('stroke', d => colors[d.key])
 		.attr('stroke-width', '3')
 		.attr('opacity', '1')
+		.attr('shape-rendering', 'crispEdges')
 
-		d3.select('#lines').selectAll('.line_mark')
-			.on('mouseover', function(d) {
-				d3.select(this).raise()
-					.attr('stroke-width', '5')
-				display_topic_text(d);
-			})
-			.on('mouseout', function(d) {
-				d3.select(this)
-					.attr('stroke-width', '3')
-				remove_topic_text(d);
-			});
+	d3.select('#lines').selectAll('.line_mark')
+		.on('mouseover', function(d) {
+			d3.select(this).raise()
+				.attr('stroke-width', '5')
+			display_topic_text(d);
+			highlighted_lines = ted_talk_data.filter(val => val.topic_pred_id == d.key);
+			d3.select('#parallel').selectAll('.p_line').data(highlighted_lines, d => d.title)
+				.attr('stroke', brushed_line_color)
+				.attr('stroke-opacity', brushed_line_opacity)
+				.raise()
+				.exit().attr('stroke', normal_line_color).attr('stroke-opacity', normal_line_opacity)
+			d3.select('#parallel').selectAll('.yaxis').raise()
+		})
+		.on('mouseout', function(d) {
+			reset_lines()
+			d3.select(this)
+				.attr('stroke-width', '3')
+			remove_topic_text(d);
+		});
 
 	// axes
 	d3.select('#lines').select('#xaxis')
@@ -232,9 +251,10 @@ function plot_it()  {
 		d3.select('#parallel').append('text')
 			.attr('class', 'talk')
 			.attr('text-anchor', 'middle')
-			.attr('fill', brushed_line_color)
+			.attr('fill', highlight_color)
 			.attr('x', parallel_width/2)
 			.attr('y', -10)
+			.attr('font-weight', 'bolder')
 			.text('Title: ' + d.title)
 	}
 	// remove text on mouseout
@@ -258,6 +278,7 @@ function plot_it()  {
 				.style('stroke',brushed_line_color)
 				.style('stroke-opacity', '1')
 				.style('stroke-width', '2')
+			d3.select('#parallel').selectAll('.yaxis').raise();
     })
 		.on('mouseout', function(d) {
 			// remove highlight on mouseout
@@ -275,7 +296,6 @@ function plot_it()  {
 					.style('stroke-opacity', normal_line_opacity)
 					.style('stroke-width', '1')
 			}
-
 	  });
 
 	// x-axis
@@ -313,19 +333,22 @@ function plot_it()  {
 		}
 	// function for brushing on each parallel axis
 	function brush_axis() {
-		reset_lines();
+		//reset_lines();
 		t_id = d3.select(this).data()[0];
 		w_scale = weight_scales[t_id];
 		var line_select = d3.event.selection;
 		var max_weight = w_scale.invert(line_select[0]), min_weight = w_scale.invert(line_select[1]);
 		var brushed_lines = ted_talk_data.filter(d => (d.weights[t_id] >= min_weight) && (d.weights[t_id] <= max_weight))
 
-		// FIXME: highlighting wrong lines
-		d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.name)
+		// FIXME: interferes with mouse hover on lines, and can't do multiple brushes
+		var data_join = d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.name)
 			.attr('stroke', brushed_line_color)
 			.attr('stroke-opacity', brushed_line_opacity)
-			.attr('stroke-width', '1')
 			.raise()
+
+		data_join.exit()
+			.attr('stroke', normal_line_color)
+			.attr('stroke-opacity', normal_line_opacity)
 	}
 
 	// place brush on each y-axis
@@ -369,6 +392,7 @@ function plot_it()  {
 			return dict;
 		})
 		.entries(ted_talk_data);
+	topic_nest.sort((a, b) => (a.key > b.key) ? 1 : -1)
 
 	var topic_stack = d3.stack()
 		.keys(ratings)
@@ -471,10 +495,10 @@ function plot_it()  {
 			.style("left", (d3.event.pageX) + "px")
             .style("top", (d3.event.pageY - 28) + "px");
 	}
-
+		/*
 		function reset_bars() {
-
 		}
+		*/
 
 		topic_bar_groups.selectAll('g')
 			.data(d => d)
@@ -504,5 +528,6 @@ function plot_it()  {
 						.attr('stroke-opacity', brushed_line_opacity)
 						.attr('stroke-width', '1')
 						.raise()
+				d3.select('#parallel').selectAll('.yaxis').raise();
 			})
 }
