@@ -404,20 +404,13 @@ function plot_it()  {
 	var stacked_data = topic_stack(topic_nest);
 
 	d3.select('svg').append('g').attr('id', 'barplot')
-		.attr('transform', 'translate('+(lines_width+200)+',0)');
-
-	var topic_dict = {
-		0: 'Society',
-		1: 'Music',
-		2: 'Conservation',
-		3: 'Medicine',
-		4: 'World development',
-		5: 'Technology',
-		6: 'Urban Development',
-		7: 'Space',
-		8: 'Education',
-		9: 'Medicine #2'
-	};
+		.attr('transform', 'translate('+(lines_width+200)+',40)');
+	
+	d3.select('svg').append('text').attr('id', 'barplot_title')
+		.text('Viewer Ratings by Topic')
+		.attr('transform', 'translate('+(lines_width+290)+',20)')
+		.attr("font-size", "20px")
+		.attr('fill', 'black');
 
 	var color_dict = {
 		'Inspiring': 'red',
@@ -476,7 +469,7 @@ function plot_it()  {
 		.data(topic_nest)
 		.enter()
 		.append('text')
-		.text(d => topic_dict[d.key])
+		.text(d => topic_groups[d.key])
 		.attr('class', d => 'bar_text_' + d.key)
 		.attr('x', bar_width+30)
 		.attr('y', d => topic_scale(d.key)+35)
