@@ -2,9 +2,8 @@ function plot_it()  {
 
 	/*
 	TO-DO:
-	- re-order reaction bars to be in the same order as the topics on x-axis of pcoords
-	- add functionality for using muliple brushes at word_indices
-	- change line colors upon reaction-selection to match the color of the bar clicked
+	- change line colors upon reaction-selection to match the color of the reaction bar clicked
+	- add functionality for selecting multiple reactions at once for comparison -- with reset button somewhere
 	- convert time-line plot to stacked areas with clamping to nearest year
 	 	(to highlight year-top_topic lines on interaction, not just top_topic)
 	*/
@@ -14,7 +13,10 @@ function plot_it()  {
 	var lines_width = 1000, lines_height = 400;
 	var right_pad = 25, y_pad = 40
 	var lines_width = lines_width-(left_pad+right_pad), lines_height = lines_height-2*y_pad;
-
+	
+	// global array to hold brushed lines
+	var global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
+	
 	// parameters for parallel coordinates appearance
 	var normal_line_color = '#bababa', normal_line_opacity = '0.2';
 	var brushed_line_color = 'steelblue', brushed_line_opacity = '0.7';
@@ -167,15 +169,18 @@ function plot_it()  {
 				.attr('stroke-width', '5')
 			display_topic_text(d);
 			highlighted_lines = ted_talk_data.filter(val => val.topic_pred_id == d.key);
-			d3.select('#parallel').selectAll('.p_line').data(highlighted_lines, d => d.title)
-				.attr('stroke', brushed_line_color)
-				.attr('stroke-opacity', brushed_line_opacity)
+			d3.select('#parallel').selectAll('.p_line').data(highlighted_lines, d => d.weights)
+				.style('stroke', brushed_line_color)
+				.style('stroke-opacity', brushed_line_opacity)
 				.raise()
-				.exit().attr('stroke', normal_line_color).attr('stroke-opacity', normal_line_opacity)
+				.exit().style('stroke', normal_line_color).style('stroke-opacity', normal_line_opacity)
 			d3.select('#parallel').selectAll('.yaxis').raise()
 		})
 		.on('mouseout', function(d) {
 			reset_lines()
+			d3.select('#parallel').selectAll('.brushed').style('stroke', brushed_line_color)
+				.style('stroke-opacity', brushed_line_opacity)
+				.raise()
 			d3.select(this)
 				.attr('stroke-width', '3')
 			remove_topic_text(d);
@@ -231,14 +236,12 @@ function plot_it()  {
 
 	// scales
 	var weight_scales = [];
-  for (i in dimensions) {
+  	for (i in dimensions) {
     var name = dimensions[i];
     weight_scales.push(d3.scaleLinear()
 			.range([parallel_height, 0])
-			//.domain([0, 0.4])
-			// optional: difference scale for each topic
 			.domain( d3.extent(ted_talk_data, function(d) { return d[name]; }) ))
-  }
+  	}
 	var topic_scale = d3.scalePoint().domain(d3.range(0, 10)).range([0, parallel_width]);
 
 	// create line object
@@ -278,18 +281,18 @@ function plot_it()  {
 				.style('stroke', highlight_color)
 				.style('stroke-opacity', '1')
 				.style('stroke-width', '2')
-
 			d3.select('#parallel').selectAll('.yaxis').raise();
-    })
+    	})
 		.on('mouseout', function(d) {
 			// remove highlight on mouseout
 			remove_talk_text(d);
-			if (d3.select(this).attr('stroke') == brushed_line_color) {
+			if (d3.select(this).classed('brushed')) {
 				// line is brushed from year line-plot
 				d3.select(this)
 					.style('stroke', brushed_line_color)
 					.style('stroke-opacity', brushed_line_opacity)
 					.style('stroke-width', '1')
+				d3.select('#parallel').selectAll('.yaxis').raise();
 			}
 			else {
 				d3.select(this)
@@ -297,8 +300,9 @@ function plot_it()  {
 					.style('stroke-opacity', normal_line_opacity)
 					.style('stroke-width', '1')
 			}
-	  });
-
+			d3.select('#parallel').selectAll('.brushed').raise()
+	  	});
+	  
 	// x-axis
 	d3.select('#parallel').selectAll('#xaxis')
 			.attr('transform', 'translate(0,' + parallel_height + ')')
@@ -326,30 +330,45 @@ function plot_it()  {
 		.attr('class', 'yaxis')
     .each(function(d, i) { d3.select(this).call(d3.axisLeft().scale(weight_scales[i])); })
 
-		function reset_lines() {
-			d3.select('#parallel').selectAll('.p_line')
-					.attr('stroke', normal_line_color)
-					.attr('stroke-opacity', normal_line_opacity)
-					.attr('stroke-width', '1')
-		}
+	function reset_lines() {
+		d3.select('#parallel').selectAll('.p_line')
+			.style('stroke', normal_line_color)
+			.style('stroke-opacity', normal_line_opacity)
+			.style('stroke-width', '1')
+	}
+	var global_min = 0, global_max = 0;
+
 	// function for brushing on each parallel axis
 	function brush_axis() {
-		reset_lines();
 		t_id = d3.select(this).data()[0];
 		w_scale = weight_scales[t_id];
 		var line_select = d3.event.selection;
 		var max_weight = w_scale.invert(line_select[0]), min_weight = w_scale.invert(line_select[1]);
-		var brushed_lines = ted_talk_data.filter(d => (d.weights[t_id] >= min_weight) && (d.weights[t_id] <= max_weight))
+		global_brushed[t_id] = [min_weight, max_weight];
+
+		var brushed_lines = ted_talk_data.filter(d => (d.weights[0] >= global_brushed[0][0]) && (d.weights[0] <= global_brushed[0][1]))
+			.filter(d => (d.weights[1] >= global_brushed[1][0]) && (d.weights[1] <= global_brushed[1][1]))
+			.filter(d => (d.weights[2] >= global_brushed[2][0]) && (d.weights[2] <= global_brushed[2][1]))
+			.filter(d => (d.weights[3] >= global_brushed[3][0]) && (d.weights[3] <= global_brushed[3][1]))
+			.filter(d => (d.weights[4] >= global_brushed[4][0]) && (d.weights[4] <= global_brushed[4][1]))
+			.filter(d => (d.weights[5] >= global_brushed[5][0]) && (d.weights[5] <= global_brushed[5][1]))
+			.filter(d => (d.weights[6] >= global_brushed[6][0]) && (d.weights[6] <= global_brushed[6][1]))
+			.filter(d => (d.weights[7] >= global_brushed[7][0]) && (d.weights[7] <= global_brushed[7][1]))
+			.filter(d => (d.weights[8] >= global_brushed[8][0]) && (d.weights[8] <= global_brushed[8][1]))
+			.filter(d => (d.weights[9] >= global_brushed[9][0]) && (d.weights[9] <= global_brushed[9][1]))
+		console.log(brushed_lines)
 
 		// FIXME: interferes with mouse hover on lines, and can't do multiple brushes
 		var data_join = d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.weights)
-			.attr('stroke', brushed_line_color)
-			.attr('stroke-opacity', brushed_line_opacity)
+			.classed('brushed', true)
+			.style('stroke', brushed_line_color)
+			.style('stroke-opacity', brushed_line_opacity)
 			.raise()
 
 		data_join.exit()
-			.attr('stroke', normal_line_color)
-			.attr('stroke-opacity', normal_line_opacity)
+			.classed('brushed', false)
+			.style('stroke', normal_line_color)
+			.style('stroke-opacity', normal_line_opacity)
 	}
 
 	// place brush on each y-axis
@@ -516,11 +535,10 @@ function plot_it()  {
 				var perc = d[1]-d[0]
 				var top_rating = getKeyByValue(d, perc)
 				var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
-				//d3.select(event.currentTarget).attr('fill', 'grey')
 				d3.select('#parallel').selectAll('.p_line').data(brushed_data, d => d.name)
-						.attr('stroke', brushed_line_color)
-						.attr('stroke-opacity', brushed_line_opacity)
-						.attr('stroke-width', '1')
+						.style('stroke', brushed_line_color)
+						.style('stroke-opacity', brushed_line_opacity)
+						.style('stroke-width', '1')
 						.raise()
 				d3.select('#parallel').selectAll('.yaxis').raise();
 			})
