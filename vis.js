@@ -56,8 +56,6 @@ function plot_it()  {
 		"#cab2d6",
 		"#6a3d9a"]
 
-	var count_max = 0;
-
 	// sort talks by film_year
 	ted_talk_data.sort((a, b) => (a.film_year > b.film_year) ? 1 : -1)
 
@@ -65,13 +63,11 @@ function plot_it()  {
 	.key(d => d.film_year)
 	.key(d => d.topic_pred_id)
 	.rollup(d => {
-		console.log(d)
-		console.log(d.length)
-		count_max = Math.max(count_max, d.length)
 		return d.length
 	})
 	.entries(ted_talk_data.filter(d => year_keys.includes(d.film_year)))
 
+	// stack years
 	const year_stack = d3.stack().keys(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
 	.value((d, key) => {
 		// locate index of key
@@ -82,17 +78,13 @@ function plot_it()  {
 
 	// scales
 	var x_scale = d3.scalePoint().domain(year_keys).range([0,lines_width]);
-	var y_scale = d3.scaleLinear().domain([0, count_max]).range([lines_height,0]);
-	// var line = d3.line().x(d => x_scale(d.key)).y(d => y_scale(d.value))
+	var y_scale = d3.scaleLinear().domain([0, d3.max(stackedYears[stackedYears.length - 1], d => d[1])]).range([lines_height,0]);
 
+	// area 
 	var area = d3.area()
 		.x(d => x_scale(d.data.key))
-		.y0(d => {
-			// console.log(d[0])
-			return y_scale(d[0])})
-		.y1(d => {
-			// console.log(d[1])
-			return y_scale(d[1])})
+		.y0(d => y_scale(d[0]))
+		.y1(d => y_scale(d[1]))
 
 
 	// display topic text and highlight topic text on mouseover
@@ -132,7 +124,7 @@ function plot_it()  {
 		.attr('d', d => {
 			return area(d);
 		})
-		.attr('fill', 'none')
+		.attr('fill', d => colors[d.key])
 		.attr('stroke', d => colors[d.key])
 		.attr('stroke-width', '3')
 		.attr('opacity', '1')
