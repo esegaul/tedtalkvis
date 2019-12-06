@@ -67,7 +67,7 @@ function plot_it()  {
 	.rollup(d => {
 		console.log(d)
 		console.log(d.length)
-		count_max = d3.max(count_max, d.length)
+		count_max = Math.max(count_max, d.length)
 		return d.length
 	})
 	.entries(ted_talk_data.filter(d => year_keys.includes(d.film_year)))
