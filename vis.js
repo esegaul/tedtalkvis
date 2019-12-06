@@ -61,64 +61,39 @@ function plot_it()  {
 	// sort talks by film_year
 	ted_talk_data.sort((a, b) => (a.film_year > b.film_year) ? 1 : -1)
 
-	// track encountered
-	var encountered = Array(10).fill(0)
-
-	// create array for missing years
-	var missing_years = [];
-	for (var i = 0; i < 10; ++i) {
-		missing_years[i] = [];
-	}
-
-	var prev_year;
-
 	var nested_data = d3.nest()
-	.key(d => d.topic_pred_id)
 	.key(d => d.film_year)
+	.key(d => d.topic_pred_id)
 	.rollup(d => {
-		var cur_year = d[0].film_year
-		var cur_id = d[0].topic_pred_id
-
-		// check for missing years at start
-		if (!encountered[cur_id]) {
-			encountered[cur_id] = 1
-			if (cur_year != year_keys[0]) {
-				var n = 0;
-				while (year_keys[n] != cur_year) {
-					missing_years[cur_id].push(year_keys[n])
-					n++;
-				}
-			}
-		}
-		// find missing years as they appear
-		else {
-			while ((Number(prev_year) + 1).toString() != cur_year) {
-				prev_year = (Number(prev_year) + 1).toString();
-				missing_years[cur_id].push(prev_year)
-			}
-		}
-		prev_year = cur_year;
-		count_max = Math.max(d.length, count_max)
+		console.log(d)
+		console.log(d.length)
+		count_max = d3.max(count_max, d.length)
 		return d.length
 	})
 	.entries(ted_talk_data.filter(d => year_keys.includes(d.film_year)))
 
-	// fill in missing years and sort if needed
-	for (var i = 0; i < nested_data.length; ++i) {
-		var cur_id = nested_data[i].key;
-		for (var n = 0; n < missing_years[cur_id].length; ++n) {
-			nested_data[i].values.push({key: missing_years[cur_id][n], value: 0})
-		}
-		// sort if data changed
-		if (missing_years[cur_id].length) {
-			nested_data[i].values.sort((a, b) => (a.key > b.key) ? 1 : -1)
-		}
-	}
+	const year_stack = d3.stack().keys(["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
+	.value((d, key) => {
+		// locate index of key
+		var index = d.values.findIndex(k => k.key == key)
+		return d.values[index] != undefined ? d.values[index].value : 0;
+	});
+	const stackedYears = year_stack(nested_data);
 
 	// scales
 	var x_scale = d3.scalePoint().domain(year_keys).range([0,lines_width]);
 	var y_scale = d3.scaleLinear().domain([0, count_max]).range([lines_height,0]);
-	var line = d3.line().x(d => x_scale(d.key)).y(d => y_scale(d.value))
+	// var line = d3.line().x(d => x_scale(d.key)).y(d => y_scale(d.value))
+
+	var area = d3.area()
+		.x(d => x_scale(d.data.key))
+		.y0(d => {
+			// console.log(d[0])
+			return y_scale(d[0])})
+		.y1(d => {
+			// console.log(d[1])
+			return y_scale(d[1])})
+
 
 	// display topic text and highlight topic text on mouseover
 	function display_topic_text(d) {
@@ -151,11 +126,11 @@ function plot_it()  {
 	}
 
 	// data join
-	var update_selection = d3.select('#lines').selectAll('.line_mark').data(nested_data)
+	var update_selection = d3.select('#lines').selectAll('.line_mark').data(stackedYears)
 	update_selection.enter().append('path')
 		.attr('class', 'line_mark')
 		.attr('d', d => {
-			return line(d.values)
+			return area(d);
 		})
 		.attr('fill', 'none')
 		.attr('stroke', d => colors[d.key])
@@ -356,7 +331,6 @@ function plot_it()  {
 			.filter(d => (d.weights[7] >= global_brushed[7][0]) && (d.weights[7] <= global_brushed[7][1]))
 			.filter(d => (d.weights[8] >= global_brushed[8][0]) && (d.weights[8] <= global_brushed[8][1]))
 			.filter(d => (d.weights[9] >= global_brushed[9][0]) && (d.weights[9] <= global_brushed[9][1]))
-		console.log(brushed_lines)
 
 		// FIXME: interferes with mouse hover on lines, and can't do multiple brushes
 		var data_join = d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.weights)
