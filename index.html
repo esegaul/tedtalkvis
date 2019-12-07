@@ -13,6 +13,7 @@
 		pointer-events: none;			
 	}
 </style>
+
 <html lang='en'>
 	<head>
 		<meta charset='utf-8'>
@@ -20,6 +21,12 @@
 		<script type='text/javascript' src='d3.js'></script>
 	</head>
 	<body>
+	<div id="option">
+		<input name="updateButton" 
+				type="button" 
+				value="Reset" 
+				onclick="reset_vis()" />
+	</div>
 	<script type='text/javascript' src='vis.js'></script>
 	<script type='text/javascript'>
 		d3.csv('data/labelled_data.csv')

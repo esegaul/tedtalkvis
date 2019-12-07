@@ -1,3 +1,16 @@
+var normal_line_color = '#bababa', normal_line_opacity = '0.2';
+var global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
+
+function reset_vis() {
+	d3.select('#parallel').selectAll('.p_line')
+			.style('stroke', normal_line_color)
+			.style('stroke-opacity', normal_line_opacity)
+			.style('stroke-width', '1')
+	global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
+	d3.select('#parallel').selectAll('.brushed').classed('brushed', false)
+	d3.select('#parallel').selectAll('.yaxis').raise()
+}
+
 function plot_it()  {
 
 	/*
