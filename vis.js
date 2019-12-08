@@ -1,11 +1,5 @@
 function plot_it()  {
 
-	/*
-	TO-DO:
-	- change line colors upon reaction-selection to match the color of the reaction bar clicked
-	- add functionality for selecting multiple reactions at once for comparison -- with reset button somewhere
-	*/
-
 	// dimensions
 	var left_pad = 100, bottom_pad = 80;
 	var lines_width = 1000, lines_height = 400;
@@ -21,6 +15,7 @@ function plot_it()  {
 	var brushed_line_color = 'steelblue', brushed_line_opacity = '0.7';
 	var highlight_color_text = '#d7191c'
 	var highlight_color = 'black'
+	
 	/*
 	*
 	TOPICS BY YEAR PLOT
@@ -355,17 +350,12 @@ function plot_it()  {
 		var line_select = d3.event.selection;
 		var max_weight = w_scale.invert(line_select[0]), min_weight = w_scale.invert(line_select[1]);
 		global_brushed[t_id] = [min_weight, max_weight];
-
+		
+		// find intersection lines of all brushes
 		var brushed_lines = ted_talk_data.filter(d => (d.weights[0] >= global_brushed[0][0]) && (d.weights[0] <= global_brushed[0][1]))
-			.filter(d => (d.weights[1] >= global_brushed[1][0]) && (d.weights[1] <= global_brushed[1][1]))
-			.filter(d => (d.weights[2] >= global_brushed[2][0]) && (d.weights[2] <= global_brushed[2][1]))
-			.filter(d => (d.weights[3] >= global_brushed[3][0]) && (d.weights[3] <= global_brushed[3][1]))
-			.filter(d => (d.weights[4] >= global_brushed[4][0]) && (d.weights[4] <= global_brushed[4][1]))
-			.filter(d => (d.weights[5] >= global_brushed[5][0]) && (d.weights[5] <= global_brushed[5][1]))
-			.filter(d => (d.weights[6] >= global_brushed[6][0]) && (d.weights[6] <= global_brushed[6][1]))
-			.filter(d => (d.weights[7] >= global_brushed[7][0]) && (d.weights[7] <= global_brushed[7][1]))
-			.filter(d => (d.weights[8] >= global_brushed[8][0]) && (d.weights[8] <= global_brushed[8][1]))
-			.filter(d => (d.weights[9] >= global_brushed[9][0]) && (d.weights[9] <= global_brushed[9][1]))
+		for (var i = 1; i < global_brushed.length; i++) {
+			brushed_lines = brushed_lines.filter(d => (d.weights[i] >= global_brushed[i][0]) && (d.weights[i] <= global_brushed[i][1]))
+		}
 
 		// brush lines
 		var data_join = d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.weights)
