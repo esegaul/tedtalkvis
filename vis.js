@@ -14,6 +14,7 @@ function plot_it()  {
 	
 	// global array to hold brushed lines
 	var global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
+	var brush_indicator = false;
 
 	// parameters for parallel coordinates appearance
 	var normal_line_color = '#bababa', normal_line_opacity = '0.2';
@@ -272,13 +273,25 @@ function plot_it()  {
 		.attr('stroke-opacity', normal_line_opacity)
 		.attr('stroke-width', '1')
 		.on('mouseover', function(d) {
-			// highlight line on mouseover
-			display_talk(d);
-			d3.select(this).raise()
-				.style('stroke', highlight_color)
-				.style('stroke-opacity', '1')
-				.style('stroke-width', '2')
-			d3.select('#parallel').selectAll('.yaxis').raise();
+			// highlight line on mouseover, if brushing on and line is brushed
+			if (brush_indicator) {
+				if (d3.select(this).classed('brushed')) {
+					display_talk(d);
+					d3.select(this).raise()
+						.style('stroke', highlight_color)
+						.style('stroke-opacity', '1')
+						.style('stroke-width', '2')
+					d3.select('#parallel').selectAll('.yaxis').raise();
+				}
+			}
+			else {
+				display_talk(d);
+				d3.select(this).raise()
+					.style('stroke', highlight_color)
+					.style('stroke-opacity', '1')
+					.style('stroke-width', '2')
+				d3.select('#parallel').selectAll('.yaxis').raise();
+			}
     	})
 		.on('mouseout', function(d) {
 			// remove highlight on mouseout
@@ -297,7 +310,7 @@ function plot_it()  {
 					.style('stroke-opacity', normal_line_opacity)
 					.style('stroke-width', '1')
 			}
-			d3.select('#parallel').selectAll('.brushed').raise()
+			//d3.select('#parallel').selectAll('.brushed').raise()
 	  	});
 	  
 	// x-axis
@@ -333,10 +346,10 @@ function plot_it()  {
 			.style('stroke-opacity', normal_line_opacity)
 			.style('stroke-width', '1')
 	}
-	var global_min = 0, global_max = 0;
 
 	// function for brushing on each parallel axis
 	function brush_axis() {
+		brush_indicator = true;
 		t_id = d3.select(this).data()[0];
 		w_scale = weight_scales[t_id];
 		var line_select = d3.event.selection;
@@ -354,7 +367,7 @@ function plot_it()  {
 			.filter(d => (d.weights[8] >= global_brushed[8][0]) && (d.weights[8] <= global_brushed[8][1]))
 			.filter(d => (d.weights[9] >= global_brushed[9][0]) && (d.weights[9] <= global_brushed[9][1]))
 
-		// FIXME: interferes with mouse hover on lines, and can't do multiple brushes
+		// brush lines
 		var data_join = d3.select('#parallel').selectAll('.p_line').data(brushed_lines, d => d.weights)
 			.classed('brushed', true)
 			.style('stroke', brushed_line_color)
@@ -365,6 +378,7 @@ function plot_it()  {
 			.classed('brushed', false)
 			.style('stroke', normal_line_color)
 			.style('stroke-opacity', normal_line_opacity)
+		d3.select('#parallel').selectAll('.yaxis').raise();
 	}
 
 	// place brush on each y-axis
@@ -562,8 +576,15 @@ function plot_it()  {
 						.style('stroke-opacity', brushed_line_opacity)
 						.style('stroke-width', '1')
 						.raise()
+						.exit()
+					d3.select('#parallel').selectAll('.brushed')
+						.classed('brushed', false)
+						.style('stroke', normal_line_color)
+						.style('stroke-opacity', normal_line_opacity)
+						.style('stroke-width', '1')
 					d3.select('#parallel').selectAll('.yaxis').raise()
-					
+					global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
+					brush_indicator = false;
 				})
 
 		})
