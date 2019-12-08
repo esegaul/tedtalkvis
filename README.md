@@ -17,3 +17,7 @@ See `Process Journal.pdf` for a detailed summary of the methodologies used to bu
 
 ## Authors:
 This project was built by Jarrett Perkins, Evan Segaul, and David Taylor for "CS 3891: Data Visualization" at Vanderbilt Univeristy.
+
+## Screenshot:
+Visualization shown with brushing on two topic axes (technology, education) and highlighting of a talk that is weighted highly in both of those topics.
+![Alt text](vis_screenshot.png?raw=true)
