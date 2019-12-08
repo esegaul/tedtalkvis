@@ -98,6 +98,9 @@ function plot_it()  {
 		d3.selectAll('.x_text_' + d.key)
 			.attr('fill', highlight_color)
 			.attr('font-weight', 'bolder')
+		d3.selectAll('.label_text_' + d.key)
+			.attr('fill', highlight_color)
+			.attr('font-weight', 'bolder')
 		d3.selectAll('.bar_text_' + d.key)
 			.attr('fill', highlight_color)
 			.attr('font-weight', 'bolder')
@@ -106,6 +109,9 @@ function plot_it()  {
 	// remove topic highlight and topic text highlight on mouseout
 	function remove_topic_text(d) {
 		d3.selectAll('.x_text_' + d.key)
+			.attr('fill', 'black')
+			.attr('font-weight', 'normal')
+		d3.selectAll('.label_text_' + d.key)
 			.attr('fill', 'black')
 			.attr('font-weight', 'normal')
 		d3.selectAll('.bar_text_' + d.key)
@@ -174,15 +180,15 @@ function plot_it()  {
 
 	// define topic groups for x-axis
 	topic_groups = [['father', 'god', 'war', 'girl', 'parents'],
-									['music', 'sound', 'playing', 'sounds', 'audience'],
-									['species', 'animals', 'planet', 'sea', 'animal'],
-									['cancer', 'disease', 'medical', 'blood', 'hospital'],
-									['africa', 'economic', 'companies', 'economy', 'china'],
-									['computer', 'machine', 'internet', 'digital', 'computers'],
-									['cities', 'car', 'cars', 'street', 'driving'],
-									['universe', 'theory', 'sun', 'planet', 'black'],
-									['students', 'education', 'learning', 'language', 'schools'],
-									['cells', 'cell', 'blood', 'disease', 'lab']]
+					['music', 'sound', 'playing', 'sounds', 'audience'],
+					['species', 'animals', 'planet', 'sea', 'animal'],
+					['cancer', 'disease', 'medical', 'blood', 'hospital'],
+					['africa', 'economic', 'companies', 'economy', 'china'],
+					['computer', 'machine', 'internet', 'digital', 'computers'],
+					['cities', 'car', 'cars', 'street', 'driving'],
+					['universe', 'theory', 'sun', 'planet', 'black'],
+					['students', 'education', 'learning', 'language', 'schools'],
+					['cells', 'cell', 'blood', 'disease', 'lab']]
 
 	// group for parellel coordinates
 	d3.select('svg').append('g')
@@ -194,8 +200,21 @@ function plot_it()  {
 
 	// plot title
 	d3.select('#parallel').append('text').text('Topic Weights')
-		.attr('transform', 'translate('+(parallel_width/2)+',-30)').attr('text-anchor', 'middle').attr('fill', '#000').attr('font-size', '20px')
-
+		.attr('transform', 'translate('+(parallel_width/2)+',-30)')
+		.attr('text-anchor', 'middle').attr('fill', '#000')
+		.attr('font-size', '20px')
+	
+	// axis titles
+	d3.select('#parallel').append('text')
+		.text('Relative Topic Weight')
+		.attr('transform', 'translate(-40,' + (parallel_height/2) + ') rotate (270)')
+		.attr('text-anchor', 'middle')
+		.attr('fill', '#000')
+	d3.select('#parallel').append('text').text('Topic Category')
+		.attr('transform', 'translate('+(parallel_width/2)+ ',' + (parallel_height+110) + ')')
+		.attr('text-anchor', 'middle')
+		.attr('fill', '#000')
+	
 	// array of topic names (length 10)
 	dimensions = d3.keys(ted_talk_data[0]).filter(function(d) { return d.includes('_weight') })
 
@@ -448,16 +467,20 @@ function plot_it()  {
 		.attr("class", "tooltip")
 		.style("opacity", 0);
 
-	d3.select('#barplot').selectAll('empty')
-		.data(topic_nest)
-		.enter()
-		.append('text')
-		.text(d => topic_groups[d.key])
-		.attr('class', d => 'bar_text_' + d.key)
-		.attr('x', bar_width+30)
-		.attr('y', d => topic_scale(d.key)+35)
-		.attr("font-size", "15px")
-		.attr('fill', 'black');
+	for (var i = 0; i < topic_groups.length; i++) {
+		var height_delta = 5;
+		for (var j = 0; j < topic_groups[i].length; j++) {
+			d3.select('#barplot').append('text')
+				.attr('class', ('label_text_' + i))
+				.attr('text-anchor', 'middle')
+				.attr('fill', '#000')
+				.attr('font-size', '12px')
+				.attr('x', bar_width+50)
+				.attr('y', d => topic_scale(i)+height_delta)
+				.text(topic_groups[i][j])
+		height_delta += 15;
+		}
+	}
 
 	function getKeyByValue(d, value) {
 		return Object.keys(d.data.value).find(key => d.data.value[key].toFixed(8) === value.toFixed(8));
@@ -472,38 +495,39 @@ function plot_it()  {
 			.style("left", (d3.event.pageX) + "px")
             .style("top", (d3.event.pageY - 28) + "px");
 	}
-		/*
-		function reset_bars() {
-		}
-		*/
 
-		topic_bar_groups.selectAll('g')
-			.data(d => d)
-			.enter()
-			.append('rect')
-			.attr('y', d => topic_scale(d.data.key))
-			.attr('height', row_height)
-			.attr('x', d => popularity_scale(d[0]))
-			.attr('width', d => popularity_scale(d[1])-popularity_scale(d[0]))
-			.on('mouseover', (d) => {
-					showInfoBubble(d)
-			})
-			.on('mouseout', () => {
-				div.transition()
-					.duration(500)
-					.style("opacity", 0);
-			})
-			.on('click', (d) => {
-				reset_lines()
-				//reset_bars()
-				var perc = d[1]-d[0]
-				var top_rating = getKeyByValue(d, perc)
-				var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
-				d3.select('#parallel').selectAll('.p_line').data(brushed_data, d => d.name)
-						.style('stroke', brushed_line_color)
-						.style('stroke-opacity', brushed_line_opacity)
-						.style('stroke-width', '1')
-						.raise()
-				d3.select('#parallel').selectAll('.yaxis').raise();
-			})
+	/*
+	function reset_bars() {
+	}
+	*/
+
+	topic_bar_groups.selectAll('g')
+		.data(d => d)
+		.enter()
+		.append('rect')
+		.attr('y', d => topic_scale(d.data.key))
+		.attr('height', row_height)
+		.attr('x', d => popularity_scale(d[0]))
+		.attr('width', d => popularity_scale(d[1])-popularity_scale(d[0]))
+		.on('mouseover', (d) => {
+				showInfoBubble(d)
+		})
+		.on('mouseout', () => {
+			div.transition()
+				.duration(500)
+				.style("opacity", 0);
+		})
+		.on('click', (d) => {
+			reset_lines()
+			//reset_bars()
+			var perc = d[1]-d[0]
+			var top_rating = getKeyByValue(d, perc)
+			var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
+			d3.select('#parallel').selectAll('.p_line').data(brushed_data, d => d.name)
+					.style('stroke', brushed_line_color)
+					.style('stroke-opacity', brushed_line_opacity)
+					.style('stroke-width', '1')
+					.raise()
+			d3.select('#parallel').selectAll('.yaxis').raise();
+		})
 }
