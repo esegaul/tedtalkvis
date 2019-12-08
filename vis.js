@@ -18,6 +18,7 @@ function plot_it()  {
 	// parameters for parallel coordinates appearance
 	var normal_line_color = '#bababa', normal_line_opacity = '0.2';
 	var brushed_line_color = 'steelblue', brushed_line_opacity = '0.7';
+	var highlight_color_text = '#d7191c'
 	var highlight_color = 'black'
 	/*
 	*
@@ -94,15 +95,24 @@ function plot_it()  {
 			.attr('x', lines_width/2)
 			.attr('y', 5)
 			.attr('font-weight', 'bolder')
-			.text('Topic: ' + topic_groups[d.key])
+			.text(() => {
+				var arr =  topic_groups[d.key]
+				newStr = ''
+				for(var i=0; i<arr.length; ++i) {
+					newStr = newStr + arr[i]
+					if(i != arr.length-1)
+						newStr = newStr + ', '
+				}
+				return 'Topic: ' + newStr
+			})
 		d3.selectAll('.x_text_' + d.key)
-			.attr('fill', highlight_color)
+			.attr('fill', highlight_color_text)
 			.attr('font-weight', 'bolder')
 		d3.selectAll('.label_text_' + d.key)
-			.attr('fill', highlight_color)
+			.attr('fill', highlight_color_text)
 			.attr('font-weight', 'bolder')
 		d3.selectAll('.bar_text_' + d.key)
-			.attr('fill', highlight_color)
+			.attr('fill', highlight_color_text)
 			.attr('font-weight', 'bolder')
 	}
 
