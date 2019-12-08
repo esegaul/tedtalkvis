@@ -1,24 +1,9 @@
-var normal_line_color = '#bababa', normal_line_opacity = '0.2';
-var global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
-
-function reset_vis() {
-	d3.select('#parallel').selectAll('.p_line')
-			.style('stroke', normal_line_color)
-			.style('stroke-opacity', normal_line_opacity)
-			.style('stroke-width', '1')
-	global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
-	d3.select('#parallel').selectAll('.brushed').classed('brushed', false)
-	d3.select('#parallel').selectAll('.yaxis').raise()
-}
-
 function plot_it()  {
 
 	/*
 	TO-DO:
 	- change line colors upon reaction-selection to match the color of the reaction bar clicked
 	- add functionality for selecting multiple reactions at once for comparison -- with reset button somewhere
-	- convert time-line plot to stacked areas with clamping to nearest year
-	 	(to highlight year-top_topic lines on interaction, not just top_topic)
 	*/
 
 	// dimensions
@@ -29,7 +14,7 @@ function plot_it()  {
 	
 	// global array to hold brushed lines
 	var global_brushed = [ [0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1],[0,1] ];
-	
+
 	// parameters for parallel coordinates appearance
 	var normal_line_color = '#bababa', normal_line_opacity = '0.2';
 	var brushed_line_color = 'steelblue', brushed_line_opacity = '0.7';
