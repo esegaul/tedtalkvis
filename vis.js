@@ -148,7 +148,8 @@ function plot_it()  {
 		.on('mouseover', function(d) {
 			reset_bars()
 			d3.select(this).raise()
-				.attr('stroke-width', '5')
+				.style('stroke', 'black')
+				.style('stroke-width', '3')
 			display_topic_text(d);
 			highlighted_lines = ted_talk_data.filter(val => val.topic_pred_id == d.key);
 			d3.select('#parallel').selectAll('.p_line').data(highlighted_lines, d => d.weights)
@@ -162,9 +163,10 @@ function plot_it()  {
 			reset_lines()
 			d3.select('#parallel').selectAll('.brushed').style('stroke', brushed_line_color)
 				.style('stroke-opacity', brushed_line_opacity)
+				.style('stroke-width', '0')
 				.raise()
 			d3.select(this)
-				.attr('stroke-width', '3')
+				.style('stroke', '')
 			remove_topic_text(d);
 		});
 
