@@ -30,7 +30,7 @@ function plot_it()  {
 	// group that will contain line plot (id: lines)
 	d3.select('svg').append('g').attr('transform', 'translate('+left_pad+','+y_pad+')').attr('id', 'lines')
 	// title
-	d3.select('#lines').append('text').text('Topics By Year')
+	d3.select('#lines').append('text').text('Predicted Topics By Year')
 	.attr('transform', 'translate('+(lines_width/2)+',-15)').attr('text-anchor', 'middle').attr('fill', '#000').attr('font-size', '20px')
 	// y-axis label
 	d3.select('#lines').append('text').text('Number of Talks')
