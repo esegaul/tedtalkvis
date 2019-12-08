@@ -18,7 +18,7 @@ function plot_it()  {
 	// parameters for parallel coordinates appearance
 	var normal_line_color = '#bababa', normal_line_opacity = '0.2';
 	var brushed_line_color = 'steelblue', brushed_line_opacity = '0.7';
-	var highlight_color = '#d7191c'
+	var highlight_color = 'black'
 	/*
 	*
 	TOPICS BY YEAR PLOT
@@ -136,6 +136,7 @@ function plot_it()  {
 
 	d3.select('#lines').selectAll('.line_mark')
 		.on('mouseover', function(d) {
+			reset_bars()
 			d3.select(this).raise()
 				.attr('stroke-width', '5')
 			display_topic_text(d);
@@ -369,7 +370,7 @@ function plot_it()  {
 	*
 	*/
 
-	var bar_height = 800;
+	var bar_height = 850;
 	var bar_width = 350;
 	var bar_pad = 20;
 	var row_height = 60;
@@ -482,24 +483,36 @@ function plot_it()  {
 		}
 	}
 
-	function getKeyByValue(d, value) {
-		return Object.keys(d.data.value).find(key => d.data.value[key].toFixed(8) === value.toFixed(8));
-	}
 
-	function showInfoBubble(d) {
-		var perc = d[1]-d[0]
+	function showInfoBubble(p, c) {
+		var perc = c[1]-c[0]
 		div.transition()
 			.duration(200)
 			.style('opacity', .9)
-		div .html(getKeyByValue(d, perc) + "<br\>" + perc.toFixed(2))
+		div .html(p.key + "<br\>" + perc.toFixed(2))
 			.style("left", (d3.event.pageX) + "px")
             .style("top", (d3.event.pageY - 28) + "px");
 	}
 
-	/*
-	function reset_bars() {
+	
+	function reset_bars_in_other_topics(topic_ind) {
+		d3.select('#barplot').selectAll('rect:not(.topic'+topic_ind+')')
+			.attr('height', row_height)
+			.style('stroke-width', '0')
 	}
-	*/
+
+	function reset_bars() {
+		reset_bars_in_other_topics(-1);
+	}
+
+	function reset_all_other_lines(i) {
+		var reset_data = ted_talk_data.filter(t => t.topic_pred_id != i)
+		d3.select('#parallel').selectAll('.p_line').data(reset_data, d => d.name)
+			.style('stroke', normal_line_color)
+			.style('stroke-opacity', normal_line_opacity)
+			.style('stroke-width', '1')
+	}
+	
 
 	topic_bar_groups.selectAll('g')
 		.data(d => d)
@@ -509,25 +522,37 @@ function plot_it()  {
 		.attr('height', row_height)
 		.attr('x', d => popularity_scale(d[0]))
 		.attr('width', d => popularity_scale(d[1])-popularity_scale(d[0]))
-		.on('mouseover', (d) => {
-				showInfoBubble(d)
-		})
-		.on('mouseout', () => {
-			div.transition()
-				.duration(500)
-				.style("opacity", 0);
-		})
-		.on('click', (d) => {
-			reset_lines()
-			//reset_bars()
-			var perc = d[1]-d[0]
-			var top_rating = getKeyByValue(d, perc)
-			var brushed_data = ted_talk_data.filter(t => t.top_rating == top_rating && t.topic_pred_id == d.data.key)
-			d3.select('#parallel').selectAll('.p_line').data(brushed_data, d => d.name)
-					.style('stroke', brushed_line_color)
-					.style('stroke-opacity', brushed_line_opacity)
-					.style('stroke-width', '1')
-					.raise()
-			d3.select('#parallel').selectAll('.yaxis').raise();
+		.attr('class', d => 'topic' + d.data.key)
+
+	d3.select('#barplot').selectAll('g')
+		.each((d, i) => {
+			var this_group = d3.select(d3.select('#barplot').selectAll('g').nodes()[i])
+			this_group.selectAll('rect')
+				.on('mouseover', r => showInfoBubble(d, r))
+				.on('mouseout', () => {
+					div.transition()
+		 			.duration(500)
+		 			.style("opacity", 0);
+				})
+				.on('click', (r) => {
+					//d.key is top rating and r.data.key is topic
+					reset_all_other_lines(r.data.key)
+					reset_bars_in_other_topics(r.data.key, d3.select('#barplot').selectAll('g').nodes())
+
+					d3.select(event.currentTarget)
+						.attr('height', row_height+10)
+						.style('stroke-width', '1')
+						.style('stroke', 'black')
+
+					var brushed_data = ted_talk_data.filter(t => t.top_rating == d.key && t.topic_pred_id == r.data.key)
+					d3.select('#parallel').selectAll('.p_line').data(brushed_data, d => d.name)
+						.style('stroke', color_palette[color_dict[d.key]])
+						.style('stroke-opacity', brushed_line_opacity)
+						.style('stroke-width', '1')
+						.raise()
+					d3.select('#parallel').selectAll('.yaxis').raise()
+					
+				})
+
 		})
 }
