@@ -16,7 +16,7 @@ Clone the repository and run `python -m http.server` from the command line. Then
 See `Process Journal.pdf` for a detailed summary of the methodologies used to build this visualization. The data is from Kaggle.com, the topic weighting is done with Non-Negative Matrix Factorization on talk transcripts, and D3.js is used for visualization.
 
 ## Authors:
-This project was built by Jarrett Perkins, Evan Segaul, and David Taylor for "CS 3891: Data Visualization" at Vanderbilt Univeristy.
+This project was built by Jarrett Perkins, Evan Segaul, and David Taylor for "CS 3891: Data Visualization" at Vanderbilt University.
 
 ## Screenshot:
 Visualization shown with brushing on two topic axes (technology, education) and highlighting of a talk that is weighted highly in both of those topics.
